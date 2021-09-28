@@ -70,23 +70,17 @@ func (m *Extractor) Provision(ctx caddy.Context) error {
 
 // Handle handles the downstream connection.
 func (m *Extractor) Handle(cx *layer4.Connection, next layer4.Handler) error {
-	m.extractTLSVars(cx)
-	return next.Handle(cx)
-}
-
-// extractTLSVars extracts (m)TLS information from a Connection and
-// adds these variables to the replacer, similar to the {http.request.tls.*}
-// variables for the http app. The layer4 variables are prefixed with
-// "l4.tls.", but use the same suffixes.
-func (m *Extractor) extractTLSVars(cx *layer4.Connection) error {
 	repl := cx.Context.Value(layer4.ReplacerCtxKey).(*caddy.Replacer)
 	addTLSVarsToReplacer(repl, cx)
-	return nil
+	return next.Handle(cx)
 }
 
 const reqTLSReplPrefix = "l4.tls."
 
-// addTLSVarsToReplacer adds all TLS vars to the Replacer
+// addTLSVarsToReplacer extracts (m)TLS information from a Connection and
+// adds these variables to the replacer, similar to what is done for the
+// {http.request.tls.*} variables in the http app. The layer4 variables
+// are prefixed with "l4.tls." instead, but use the same suffixes.
 // Adapted from: github.com/caddyserver/caddy/v2/modules/caddyhttp/replacer.go
 func addTLSVarsToReplacer(repl *caddy.Replacer, cx *layer4.Connection) {
 	tlsVars := func(key string) (interface{}, bool) {
